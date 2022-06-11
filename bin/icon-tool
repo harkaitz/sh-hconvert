@@ -1,0 +1,147 @@
+#!/bin/sh -e
+#L:
+#L:  MIT License
+#L:  
+#l:  Bug reports, feature requests to gemini|https://harkadev.com/oss
+#l:  Copyright (c) 2022 Harkaitz Agirre, harkaitz.aguirre@gmail.com
+#L:
+#L:  Permission is hereby granted, free of charge, to any person obtaining
+#L:  a copy of this software and associated documentation files (the
+#L:  "Software"), to deal in the Software without restriction, including
+#L:  without limitation the rights to use, copy, modify, merge, publish,
+#L:  distribute, sublicense, and/or sell copies of the Software, and to
+#L:  permit persons to whom the Software is furnished to do so, subject to
+#L:  the following conditions:
+#L:
+#L:  The above copyright notice and this permission notice shall be
+#L:  included in all copies or substantial portions of the Software.
+#L:
+#L:  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+#L:  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+#L:  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+#L:  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+#L:  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+#L:  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+#L:  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+##:
+#h: Usage: $0 ...
+#h:
+#h: Icon and logo check and transformation tool.
+#h:
+#h: ... get-size [FILE|SIZE] : Get size, list sizes.
+#h: ... android-app  ...     : Android app operations.
+icon_tool() {
+    local cmd="$1"
+    shift
+    case "${cmd}" in
+        get-size)    icon_tool_get_size "$@"                       ;;
+        android-app) icon_tool_android_app "$@"                    ;;
+        *)           icon_tool_error "Invalid subcommand: ${cmd}." ;;
+    esac
+}
+icon_tool_check_programs() {
+    if which "convert" >/dev/null 2>&1;then
+        icon_tool_error "Can't find ImageMagick's convert command."
+        return 1
+    fi
+    if which "identify" >/dev/null 2>&1;then
+        icon_tool_error "Can't find ImageMagick's identify command."
+        return 1
+    fi
+}
+
+
+
+## -------------------
+## ---- KNOWLEDGE ----
+## -------------------
+icon_tool_get_size() { # NAME
+    case "${1}" in
+        '')     cat <<-EOF
+		xxxhdpi xxhdpi xhdpi hdpi mdpi
+		EOF
+                ;;
+        xxxhdpi) echo "192x192";;
+        xxhdpi)  echo "144x144";;
+        xhdpi)   echo "96x96"  ;;
+        hdpi)    echo "72x72"  ;;
+        mdpi)    echo "42x42"  ;;
+        *.png)   identify -format '%wx%h\n' "${1}";;
+        *x*)     echo "${1}"   ;;
+        *)       icon_tool_error "Invalid size: ${1}"; return 1;;
+    esac
+}
+
+
+## ---------------------
+## ---- ANDROID APP ----
+## ---------------------
+icon_tool_android_app() {
+    local cmd="$1"
+    if test ! -n "${cmd}";then
+        cat <<-EOF >&2
+	... set-icon round|square DIRECTORY [ICON] : Set icon of project.
+	EOF
+        return 1
+    fi
+    shift
+    case "${cmd}" in
+        set-icon) icon_tool_android_app_set_icon "$@"                  ;;
+        *)        icon_tool_error "Invalid argument: ${cmd}."; return 1;;
+    esac
+}
+icon_tool_android_app_set_icon() { # MODE DIR [ICON]
+    local mode="$1" dir="$2" icon="$3" file=
+    ## Check parameters.
+    case "${mode}" in
+        '')     icon_tool_error "Missing mode: round|square."; return 1;;
+        round)  local regex='.*/mipmap-[^/]*/ic_launcher_round.png'    ;;
+        square) local regex='.*/mipmap-[^/]*/ic_launcher.png'   ;;
+        *)      icon_tool_error "Invalid mode: ${cmd}.";       return 1;;
+    esac
+    case "${dir}" in
+        '')     icon_tool_error "Please specify a directory."; return 1;;
+    esac
+    ## Search for files.
+    if test ! -d "${dir}";then
+        icon_tool_error "Directory '${dir}' does not exist."
+        return 1
+    fi
+    local files="`find "${dir}" -type f -iregex "${regex}"`"
+    ## Print files.
+    if test ! -n "${icon}";then
+        printf '%s\n' "${files}"
+        return 0
+    fi
+    ## Replace.
+    if test ! -f "${icon}";then
+        icon_tool_error "File '${icon}' does not exist."
+        return 1
+    fi
+    printf '%s\n' "${files}" | while read -r line;do
+        if test ! -n "${line}";then continue;fi
+        local size="`icon_tool_get_size "${line}"`"
+        if test ! -n "${size}";then continue;fi
+        echo "${line}"
+        convert "${icon}" -quiet -resize "${size}" "${line}"
+    done
+}
+
+
+## ----------------------------------------------
+icon_tool_log()   { echo "${SCRNAME}: $*" >&2; }
+icon_tool_error() { icon_tool_log "error: $*"; }
+## ----------------------------------------------
+SCRNAME="`basename "$0"`"
+if test @"${SCRNAME}" = @"icon-tool";then
+    case "${1}" in
+        ''|-h|--help)
+            sed -n 's/^ *#h: \{0,1\}//p' "$0" | sed "s|\\\$0|${SCRNAME}|g"
+            echo ""
+            sed -n 's/^ *#l: \{0,2\}//p' "$0"
+            ;;
+        *)
+            icon_tool "$@"
+            ;;
+    esac
+fi

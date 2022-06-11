@@ -12,6 +12,15 @@ hodt2pdf
     
     Transform an Open Office ODT file to PDF using `soffice` command.
 
+icon-tool
+
+    Usage: icon-tool ...
+    
+    Icon and logo check and transformation tool.
+    
+    ... get-size [FILE|SIZE] : Get size, list sizes.
+    ... android-app  ...     : Android app operations.
+
 ## Collaborating
 
 For making bug reports, feature requests and donations visit
