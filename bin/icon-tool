@@ -81,13 +81,15 @@ icon_tool_android_app() {
     if test ! -n "${cmd}";then
         cat <<-EOF >&2
 	... set-icon round|square DIRECTORY [ICON] : Set icon of project.
+	... play-icon IMAGE                        : Create IMAGE-512x512.png
 	EOF
         return 1
     fi
     shift
     case "${cmd}" in
-        set-icon) icon_tool_android_app_set_icon "$@"                  ;;
-        *)        icon_tool_error "Invalid argument: ${cmd}."; return 1;;
+        set-icon)  icon_tool_android_app_set_icon  "$@"                 ;;
+        play-icon) icon_tool_android_app_play_icon "$@"                 ;;
+        *)         icon_tool_error "Invalid argument: ${cmd}."; return 1;;
     esac
 }
 icon_tool_android_app_set_icon() { # MODE DIR [ICON]
@@ -126,6 +128,15 @@ icon_tool_android_app_set_icon() { # MODE DIR [ICON]
         convert "${icon}" -quiet -resize "${size}" "${line}"
     done
 }
+icon_tool_android_app_play_icon() {
+    local f='' t=''
+    for f in "$@"; do
+        t="`echo "${f}" | sed 's|\.[^\.]*$|-512x512.png|'`"
+        echo "G ${t}" >&2
+        convert "${f}" -quiet -resize "512x512!" "${t}"
+    done
+}
+
 
 
 ## ----------------------------------------------
