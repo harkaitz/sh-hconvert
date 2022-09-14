@@ -46,7 +46,12 @@ hodt2html() {
         error "Command 'soffice' not found."
         return 1
     fi
-    LD_LIBRARY_PATH=/lib64 soffice --headless --convert-to "${fmt}" --outdir "${dir}" "${odt}"
+    LD_LIBRARY_PATH=/lib64    \
+        soffice               \
+        --headless            \
+        --convert-to "${fmt}" \
+        --outdir "${dir}"     \
+        "${odt}" >/dev/null 2>&1
     sleep 2
 }
 ## -----------------------------------------------------------------------------

@@ -6,6 +6,12 @@ hodt2doc
     
     Transform an Open Office ODT file to DOC using `soffice command.
 
+hodt2html
+
+    Usage: hodt2html ODT DIR
+    
+    Convert ODT files to HTML format.
+
 hodt2pdf
 
     Usage: hodt2pdf ODT PDF
