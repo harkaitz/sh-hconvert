@@ -42,25 +42,22 @@ hodt2pdf() {
     if test -d "${pdf}";then
         local dir="${pdf}"
     else
-        local dir="`tempfile`.d"
+        local dir="/tmp/hodt2pdf.d"
     fi
     mkdir -p "${dir}"
     local tfile="${dir}"/"`basename ${odt} .odt`.pdf"
-    hodt2pdf_vrun            \
-        soffice              \
-        --headless           \
-        --convert-to pdf     \
-        --outdir "${dir}"    \
-        "${odt}"
+    soffice --headless        \
+            --convert-to pdf  \
+            --outdir "${dir}" \
+            "${odt}"          \
+            2>&1 >/dev/null   \
+        | sed '/warning/d' >&2
     sleep 1
     if test ! -d "${pdf}";then
-        hodt2pdf_vrun mv "${tfile}" "${pdf}"
+        mv "${tfile}" "${pdf}"
     fi
 }
-hodt2pdf_vrun() {
-    echo "${SCRNAME}: $*" >&2
-    "$@"
-}
+
 ## -----------------------------------------------------------------------------
 
 ## -----------------------------------------------------------------------------
