@@ -3,7 +3,7 @@
 #L:  MIT License
 #L:  
 #l:  Bug reports, feature requests to gemini|https://harkadev.com/oss
-#l:  Copyright (c) 2022 Harkaitz Agirre, harkaitz.aguirre@gmail.com
+#l:  Copyright (c) 2023 Harkaitz Agirre, harkaitz.aguirre@gmail.com
 #L:
 #L:  Permission is hereby granted, free of charge, to any person obtaining
 #L:  a copy of this software and associated documentation files (the
@@ -23,44 +23,40 @@
 #L:  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 #L:  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 #L:  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#h: Usage: $0 ODT PDF
+##:
+#h: Usage: $0 ODT|DOC [PDF]
 #h:
-#h: Transform an Open Office ODT file to PDF using `soffice` command.
-hodt2pdf() {
-    local odt="$1" pdf="$2"
-    if test ! -n "${odt}";then
+#h: Print an Open Office ODT file to a PDF file.
+#h:
+#h: (1) The program uses `soffice` for the conversion.
+#h: (2) If you don't specify a PDF it will be created next to
+#h:     the ODT file with `.odt` replaced with `.pdf`.
+#h: (3) It also supports `docx` and `doc`.
+##:
+hodt2pdf() (
+    odt="$1" pdf="$2" dir="/tmp/hodt2pdf.d"
+    if test ! -n "${odt}"; then
         echo "${SCRNAME}: error: Please specify an odt file." >&2
         return 1
-    elif test ! -f "${odt}";then
+    elif test ! -f "${odt}"; then
         echo "${SCRNAME}: error: File ${odt} does not exist." >&2
         return 1
     fi
-    if test ! -n "${pdf}";then
-        echo "${SCRNAME}: error: Please specify a pdf file." >&2
-        return 1
+    if test ! -n "${pdf}"; then
+       pdf="`echo "$odt" | sed 's|\.[^\.]*$||'`.pdf"
     fi
-    if test -d "${pdf}";then
-        local dir="${pdf}"
-    else
-        local dir="/tmp/hodt2pdf.d"
-    fi
+    tmp="$dir/`basename "$odt" | sed 's|\.[^\.]*$||'`.pdf"
+    
     mkdir -p "${dir}"
-    local tfile="${dir}"/"`basename ${odt} .odt`.pdf"
-    soffice --headless        \
-            --convert-to pdf  \
-            --outdir "${dir}" \
-            "${odt}"          \
-            2>&1 >/dev/null   \
-        | sed '/warning/d' >&2
+    soffice --headless       \
+            --convert-to pdf \
+            --outdir "$dir"  \
+            "$odt"           \
+            2>&1 >/dev/null | sed '/warning/d' >&2
     sleep 1
-    if test ! -d "${pdf}";then
-        mv "${tfile}" "${pdf}"
-    fi
-}
-
-## -----------------------------------------------------------------------------
-
-## -----------------------------------------------------------------------------
+    mv -v "$tmp" "$pdf"
+)
+## -------------------------------------------------------------------
 SCRNAME="`basename "$0"`"
 if test @"${SCRNAME}" = @"hodt2pdf";then
     if test -n "$1";then

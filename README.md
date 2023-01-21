@@ -1,4 +1,17 @@
+# HCONVERT
+
+My convertion scripts.
+
 ## Help
+
+favigen
+
+    Usage: favigen [-s SIZE] FROM [TO]
+    
+    Create a 32x32 favicon.ico file with ImageMagick(1). Then you can
+    point to it with:
+    
+        <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
 hodt2doc
 
@@ -14,9 +27,14 @@ hodt2html
 
 hodt2pdf
 
-    Usage: hodt2pdf ODT PDF
+    Usage: hodt2pdf ODT|DOC [PDF]
     
-    Transform an Open Office ODT file to PDF using `soffice` command.
+    Print an Open Office ODT file to a PDF file.
+    
+    (1) The program uses `soffice` for the conversion.
+    (2) If you don't specify a PDF it will be created next to
+        the ODT file with `.odt` replaced with `.pdf`.
+    (3) It also supports `docx` and `doc`.
 
 icon-tool
 

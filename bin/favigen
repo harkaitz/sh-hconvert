@@ -24,42 +24,51 @@
 #L:  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 #L:  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##:
-#h: Usage: $0 ODT DIR
+#h: Usage: $0 [-s SIZE] FROM [TO]
 #h:
-#h: Convert ODT files to HTML format.
+#h: Create a 32x32 favicon.ico file with ImageMagick(1). Then you can
+#h: point to it with:
+#h:
+#h:     <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 ##:
-hodt2html() {
-    local odt="$1" dir="$2" fmt="html:HTML (StarWriter):UTF8"
-    if test ! -n "${odt}"; then
-        error "Please specify an odt file."
-        return 1
-    elif test ! -n "${dir}"; then
-        error "Please specify a directory."
-        return 1
-    elif test ! -f "${odt}"; then
-        error "${odt}: The file does not exist."
-        return 1
-    elif test ! -d "${dir}"; then
-        error "${dir}: The directory does not exist."
-        return 1
-    elif ! which "soffice" >/dev/null 2>&1; then
-        error "Command 'soffice' not found."
+##: - https://webflow.com/blog/favicon-guide
+##: - https://nedbatchelder.com/blog/202012/favicons_with_imagemagick.html
+favigen() (
+    
+    ## Parse command line options.
+    size="32x32"
+    while getopts "s:" optopt; do
+        case $optopt in
+            s)  size="$OPTARG" ;;
+            \?) return 1       ;;
+        esac
+    done
+    shift $(( $OPTIND - 1 ))
+    from="$1" to="$2"
+    if test ! -n "$from"; then
+        echo "$SCRNAME: error: Please specify an image." >&2
         return 1
     fi
-    LD_LIBRARY_PATH=/lib64    \
-        soffice               \
-        --headless            \
-        --convert-to "${fmt}" \
-        --outdir "${dir}"     \
-        "${odt}" >/dev/null 2>&1
-    sleep 2
-}
-## -----------------------------------------------------------------------------
-
-## -----------------------------------------------------------------------------
-error() { echo "${SCRNAME}: error: $*" >&2; }
+    if test ! -n "$to"; then
+        to="`dirname "$from"`/favicon.ico"
+    fi
+    ## Select imagemagick.
+    case "`uname -o`" in
+        Msys) convert="/mingw64/bin/convert.exe";;
+        *)    convert="convert";;
+    esac
+    
+    ## Perform conversion.
+    exec "$convert"             \
+         "$from"                \
+         -transparent white     \
+         -resize      "$size"   \
+         "$to"
+    
+    
+)
 SCRNAME="`basename "$0"`"
-if test @"${SCRNAME}" = @"hodt2html";then
+if test @"${SCRNAME}" = @"favigen";then
     case "${1}" in
         ''|-h|--help)
             sed -n 's/^ *#h: \{0,1\}//p' "$0" | sed "s|\\\$0|${SCRNAME}|g"
@@ -67,7 +76,7 @@ if test @"${SCRNAME}" = @"hodt2html";then
             sed -n 's/^ *#l: \{0,2\}//p' "$0"
             ;;
         *)
-            hodt2html "$@"
+            favigen "$@"
             ;;
     esac
 fi
