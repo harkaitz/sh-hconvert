@@ -1,9 +1,11 @@
-DESTDIR     =
-PREFIX      =/usr/local
+PROJECT=sh-hconvert
+VERSION=1.0.0
+PREFIX=/usr/local
 all:
 clean:
 install:
-## -- install-sh --
+
+## -- BLOCK:sh --
 install: install-sh
 install-sh:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
@@ -12,10 +14,13 @@ install-sh:
 	cp bin/hodt2html        $(DESTDIR)$(PREFIX)/bin
 	cp bin/hodt2doc         $(DESTDIR)$(PREFIX)/bin
 	cp bin/hodt2pdf         $(DESTDIR)$(PREFIX)/bin
-## -- install-sh --
-## -- license --
+## -- BLOCK:sh --
+## -- BLOCK:license --
 install: install-license
-install-license: LICENSE
-	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/sh-hconvert
-	cp LICENSE $(DESTDIR)$(PREFIX)/share/doc/sh-hconvert
-## -- license --
+install-license: 
+	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/$(PROJECT)
+	cp LICENSE README.md $(DESTDIR)$(PREFIX)/share/doc/$(PROJECT)
+update: update-license
+update-license:
+	ssnip README.md
+## -- BLOCK:license --
